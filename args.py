@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 
 def get_args():
@@ -17,7 +18,7 @@ def get_args():
         default="sessions",
     )
 
-    parser.add_argument("--csv_dir", type=str, default="data/csv")
+    parser.add_argument("--csv_dir", type=str, default=str(Path(__file__).resolve().parent / "data/csv"))
 
     parser.add_argument("--epochs", type=int, default=100)
 
