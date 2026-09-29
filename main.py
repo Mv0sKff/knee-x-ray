@@ -2,9 +2,10 @@ import os
 
 import pandas as pd
 from args import *
+from dataset import knee_xray_dataset
+from torch.utils.data import DataLoader
 
 # 1. get arguments
-
 args = get_args()
 print(args.epochs)
 
@@ -14,3 +15,12 @@ for fold in range(5):
     train_set = pd.read_csv(os.path.join(args.csv_dir, f"train_fold_{fold}.csv"))
     val_set = pd.read_csv(os.path.join(args.csv_dir, f"val_fold_{fold}.csv"))
 
+    # 3. Preparing dataset
+    train_dataset = knee_xray_dataset(train_set)
+    val_dataset = knee_xray_dataset(val_set)
+
+    # 4. Create data loaders
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
+
+    # for i, (img, label) in enumerate(trainloader):
