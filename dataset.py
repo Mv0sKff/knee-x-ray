@@ -8,7 +8,7 @@ def read_img(file_path):
 
 
 class knee_xray_dataset(Dataset):
-    def __init(self, dataset):
+    def __init__(self, dataset):
         self.dataset = dataset
 
     def __len__(self):
