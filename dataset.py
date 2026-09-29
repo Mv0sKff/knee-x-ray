@@ -15,7 +15,6 @@ class knee_xray_dataset(Dataset):
         return len(self.dataset)
 
     def __getitem__(self, idx):
-        print(self.dataset[idx])
         img = read_img(self.dataset["Path"].iloc[idx])
         name = self.dataset["Name"].iloc[idx]
         target = self.dataset["KL"].iloc[idx]

@@ -23,4 +23,5 @@ for fold in range(5):
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
 
-    # for i, (img, label) in enumerate(trainloader):
+    for i, batch in enumerate(train_loader):
+        print(i, batch["target"])
