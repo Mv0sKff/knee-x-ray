@@ -5,6 +5,7 @@ from args import *
 from dataset import knee_xray_dataset
 from model import MyModel
 from torch.utils.data import DataLoader
+from trainer import train_model
 
 # 1. get arguments
 args = get_args()
@@ -28,7 +29,7 @@ for fold in range(5):
     model = MyModel(backbone=args.backbone)
 
     # 6. Train the model
-
+    train_model(model, train_loader, train_loader)
 
     for i, batch in enumerate(train_loader):
         #print(i, batch["target"])
