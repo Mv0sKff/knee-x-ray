@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import pandas as pd
 from args import *
@@ -10,6 +11,7 @@ from trainer import train_model
 # 1. get arguments
 args = get_args()
 print(args.epochs)
+run_name = datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
 # 2. Iterate over each fold
 
@@ -29,8 +31,9 @@ for fold in range(5):
     model = MyModel(backbone=args.backbone)
 
     # 6. Train the model
-    train_model(model, train_loader, train_loader)
+    session_name = f"{run_name}_fold_{fold}"
+    train_model(model, train_loader, val_loader, session_name=session_name, save=True)
 
     for i, batch in enumerate(train_loader):
-        #print(i, batch["target"])
+        # print(i, batch["target"])
         pass
