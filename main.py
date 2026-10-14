@@ -6,7 +6,7 @@ from args import *
 from dataset import knee_xray_dataset
 from model import MyModel
 from torch.utils.data import DataLoader
-from trainer import train_model
+from train import train_model
 
 # 1. get arguments
 args = get_args()
