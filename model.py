@@ -1,7 +1,14 @@
 from args import *
 from torch import nn
 from torch.nn import Module
-from torchvision.models import resnet18, resnet34, resnet50
+from torchvision.models import (
+    ResNet18_Weights,
+    ResNet34_Weights,
+    ResNet50_Weights,
+    resnet18,
+    resnet34,
+    resnet50,
+)
 
 
 class MyModel(Module):
@@ -10,13 +17,21 @@ class MyModel(Module):
 
         # TODO: could be done cleaner
         if backbone == "resnet18":
-            self.model = resnet18(pretrained=pretrained)
+            self.model = resnet18(
+                weights=ResNet18_Weights.IMAGENET1K_V1 if pretrained else None
+            )
         elif backbone == "resnet34":
-            self.model = resnet34(pretrained=pretrained)
+            self.model = resnet34(
+                weights=ResNet34_Weights.IMAGENET1K_V1 if pretrained else None
+            )
         elif backbone == "resnet50":
-            self.model = resnet50(pretrained=pretrained)
+            self.model = resnet50(
+                weights=ResNet50_Weights.IMAGENET1K_V1 if pretrained else None
+            )
         else:
-            self.model = resnet18(pretrained=pretrained)
+            self.model = resnet18(
+                weights=ResNet18_Weights.IMAGENET1K_V1 if pretrained else None
+            )
 
         self.model.fc = nn.Linear(self.model.fc.in_features, 5)
 
