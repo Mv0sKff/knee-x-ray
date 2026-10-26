@@ -1,4 +1,3 @@
-from args import *
 from torch import nn
 from torch.nn import Module
 from torchvision.models import (
@@ -9,6 +8,8 @@ from torchvision.models import (
     resnet34,
     resnet50,
 )
+
+from args import *
 
 
 class MyModel(Module):

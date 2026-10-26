@@ -3,10 +3,11 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+from torch.utils.data import DataLoader
+
 from args import *
 from dataset import knee_xray_dataset
 from model import MyModel
-from torch.utils.data import DataLoader
 from train import train_model
 
 # 1. get arguments
@@ -41,7 +42,3 @@ for fold in range(5):
         output_dir=run_dir,
         save=True,
     )
-
-    for i, batch in enumerate(train_loader):
-        # print(i, batch["target"])
-        pass

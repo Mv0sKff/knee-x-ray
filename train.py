@@ -1,7 +1,8 @@
 import torch
+from torch import nn, optim
+
 from args import *
 from schemas import History
-from torch import nn, optim
 from utils import compute_metrics, plot_metric
 
 args = get_args()
