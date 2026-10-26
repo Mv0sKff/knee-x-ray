@@ -1,8 +1,9 @@
 from pathlib import Path
 
 import torch
-from args import *
 from torch import nn, optim
+
+from args import *
 from utils import plot_loss
 
 args = get_args()
@@ -11,6 +12,7 @@ args = get_args()
 def train_model(model, train_loader, val_loader, session_name, save=False):
     train_losses = []
     val_losses = []
+    best_val_loss = float("inf")
     for epoch in range(args.epochs):
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(
@@ -36,7 +38,15 @@ def train_model(model, train_loader, val_loader, session_name, save=False):
 
         val_loss, val_accuracy = validate_model(model, val_loader, criterion)
         train_losses.append(running_loss / total)
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            if save:
+                output_dir = Path(args.output_dir)
+                output_dir.mkdir(parents=True, exist_ok=True)
+                torch.save(model.state_dict(), output_dir / f"{session_name}_best.pt")
         val_losses.append(val_loss)
+
         print(
             f"epoch: {epoch} |",
             f"training loss: {running_loss / total:.4f} |",
@@ -51,9 +61,7 @@ def train_model(model, train_loader, val_loader, session_name, save=False):
                 save_path=Path(args.output_dir) / f"{session_name}_train_val_loss.png",
             )
 
-        # TODO: save model if val loss is better, model in sessions/
         # TODO: plot, performance validation
-        # TODO: test on cuda gpu
 
 
 def validate_model(model, val_loader, criterion):
