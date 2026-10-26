@@ -1,25 +1,26 @@
-from pathlib import Path
-
 import torch
-from torch import nn, optim
-
 from args import *
-from utils import plot_loss
+from schemas import History
+from torch import nn, optim
+from utils import compute_metrics, plot_loss
 
 args = get_args()
 
 
-def train_model(model, train_loader, val_loader, session_name, save=False):
-    train_losses = []
-    val_losses = []
+def train_model(model, train_loader, val_loader, session_name, output_dir, save=False):
+    train_history = History()
+    val_history = History()
     best_val_loss = float("inf")
     for epoch in range(args.epochs):
+        model.train()
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(
             model.parameters(), lr=args.lr, weight_decay=args.weight_decay
         )
         running_loss = 0.0
         total = 0
+        train_logits = []
+        train_labels = []
 
         for batch in train_loader:
             inputs = batch["xray"]
@@ -35,30 +36,37 @@ def train_model(model, train_loader, val_loader, session_name, save=False):
 
             running_loss += loss.item() * inputs.size(0)
             total += inputs.size(0)
+            train_logits.append(outputs.detach())
+            train_labels.append(labels)
 
-        val_loss, val_accuracy = validate_model(model, val_loader, criterion)
-        train_losses.append(running_loss / total)
+        train_history.append(
+            running_loss / total,
+            *compute_metrics(torch.cat(train_labels), torch.cat(train_logits)),
+        )
+        val_history.append(*validate_model(model, val_loader, criterion))
 
+        val_loss = val_history.loss[-1]
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             if save:
-                output_dir = Path(args.output_dir)
                 output_dir.mkdir(parents=True, exist_ok=True)
                 torch.save(model.state_dict(), output_dir / f"{session_name}_best.pt")
-        val_losses.append(val_loss)
 
         print(
             f"epoch: {epoch} |",
-            f"training loss: {running_loss / total:.4f} |",
-            f"validation loss: {val_loss:.4f} |",
-            f"validation accuracy: {val_accuracy:.4f}",
+            f"train loss: {train_history.loss[-1]:.4f} |",
+            f"val loss: {val_loss:.4f} |",
+            f"val accuracy: {val_history.accuracy[-1]:.4f} |",
+            f"val balanced accuracy: {val_history.balanced_accuracy[-1]:.4f} |",
+            f"val ROC-AUC: {val_history.roc_auc[-1]:.4f} |",
+            f"val AP: {val_history.average_precision[-1]:.4f}",
         )
 
         if save:
             plot_loss(
-                train_losses,
-                val_losses,
-                save_path=Path(args.output_dir) / f"{session_name}_train_val_loss.png",
+                train_history.loss,
+                val_history.loss,
+                save_path=output_dir / f"{session_name}_train_val_loss.png",
             )
 
         # TODO: plot, performance validation
@@ -68,8 +76,9 @@ def validate_model(model, val_loader, criterion):
     model.eval()
 
     running_loss = 0.0
-    correct = 0
     total = 0
+    all_logits = []
+    all_labels = []
 
     for batch in val_loader:
         inputs = batch["xray"]
@@ -80,12 +89,12 @@ def validate_model(model, val_loader, criterion):
             loss = criterion(outputs, labels)
 
             running_loss += loss.item() * inputs.size(0)
-
-            predictions = outputs.argmax(dim=1)
-            correct += (predictions == labels).sum().item()
             total += outputs.size(0)
+            all_logits.append(outputs)
+            all_labels.append(labels)
 
-    running_loss /= total
-    val_accuracy = correct / total
+    accuracy, balanced_acc, roc_auc, avg_precision = compute_metrics(
+        torch.cat(all_labels), torch.cat(all_logits)
+    )
 
-    return running_loss, val_accuracy
+    return running_loss / total, accuracy, balanced_acc, roc_auc, avg_precision

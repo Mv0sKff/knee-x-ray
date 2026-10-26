@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 from args import *
@@ -10,8 +11,9 @@ from train import train_model
 
 # 1. get arguments
 args = get_args()
-print(args.epochs)
-run_name = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+print("Epochs:", args.epochs)
+run_name = datetime.now().astimezone().strftime("%Y-%m-%d_%H%M%S")
+run_dir = Path(args.output_dir) / run_name
 
 # 2. Iterate over each fold
 
@@ -32,7 +34,14 @@ for fold in range(5):
 
     # 6. Train the model
     session_name = f"{run_name}_fold_{fold}"
-    train_model(model, train_loader, val_loader, session_name=session_name, save=True)
+    train_model(
+        model,
+        train_loader,
+        val_loader,
+        session_name=session_name,
+        output_dir=run_dir,
+        save=True,
+    )
 
     for i, batch in enumerate(train_loader):
         # print(i, batch["target"])
