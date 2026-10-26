@@ -17,7 +17,7 @@ print("Epochs:", args.epochs)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Device:", device)
 run_name = datetime.now().astimezone().strftime("%Y-%m-%d_%H%M%S")
-run_dir = Path(args.output_dir) / run_name
+run_dir = Path(args.resume) if args.resume else Path(args.output_dir) / run_name
 
 # 2. Iterate over each fold
 

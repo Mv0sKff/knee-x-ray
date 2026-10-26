@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 import torch
 from torch import nn, optim
 
@@ -12,13 +14,24 @@ def train_model(model, train_loader, val_loader, fold, output_dir, save=False):
     train_history = History()
     val_history = History()
     best_balanced_accuracy = -1.0
+    start_epoch = 0
     device = next(model.parameters()).device
-    for epoch in range(args.epochs):
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(
+        model.parameters(), lr=args.lr, weight_decay=args.weight_decay
+    )
+    last_path = output_dir / f"last_fold_{fold}.pt"
+    if last_path.exists():
+        state = torch.load(last_path, map_location=device)
+        model.load_state_dict(state["model"])
+        optimizer.load_state_dict(state["optimizer"])
+        train_history = History(**state["train_history"])
+        val_history = History(**state["val_history"])
+        best_balanced_accuracy = state["best_balanced_accuracy"]
+        start_epoch = state["epoch"] + 1
+        print(f"fold {fold}: resuming at epoch {start_epoch}")
+    for epoch in range(start_epoch, args.epochs):
         model.train()
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(
-            model.parameters(), lr=args.lr, weight_decay=args.weight_decay
-        )
         running_loss = 0.0
         total = 0
         train_logits = []
@@ -55,6 +68,22 @@ def train_model(model, train_loader, val_loader, fold, output_dir, save=False):
                 torch.save(
                     model.state_dict(), output_dir / f"best_model_fold_{fold}.pth"
                 )
+
+        if save:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            tmp_path = last_path.with_suffix(".tmp")
+            torch.save(
+                {
+                    "model": model.state_dict(),
+                    "optimizer": optimizer.state_dict(),
+                    "train_history": asdict(train_history),
+                    "val_history": asdict(val_history),
+                    "best_balanced_accuracy": best_balanced_accuracy,
+                    "epoch": epoch,
+                },
+                tmp_path,
+            )
+            tmp_path.replace(last_path)
 
         print(
             f"epoch: {epoch} |",
