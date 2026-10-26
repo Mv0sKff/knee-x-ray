@@ -12,6 +12,7 @@ def train_model(model, train_loader, val_loader, fold, output_dir, save=False):
     train_history = History()
     val_history = History()
     best_balanced_accuracy = -1.0
+    device = next(model.parameters()).device
     for epoch in range(args.epochs):
         model.train()
         criterion = nn.CrossEntropyLoss()
@@ -24,8 +25,8 @@ def train_model(model, train_loader, val_loader, fold, output_dir, save=False):
         train_labels = []
 
         for batch in train_loader:
-            inputs = batch["xray"]
-            labels = batch["target"]
+            inputs = batch["xray"].to(device)
+            labels = batch["target"].to(device)
 
             optimizer.zero_grad()
             outputs = model(inputs)
@@ -37,8 +38,8 @@ def train_model(model, train_loader, val_loader, fold, output_dir, save=False):
 
             running_loss += loss.item() * inputs.size(0)
             total += inputs.size(0)
-            train_logits.append(outputs.detach())
-            train_labels.append(labels)
+            train_logits.append(outputs.detach().cpu())
+            train_labels.append(labels.cpu())
 
         train_history.append(
             running_loss / total,
@@ -83,6 +84,7 @@ def train_model(model, train_loader, val_loader, fold, output_dir, save=False):
 
 def validate_model(model, val_loader, criterion):
     model.eval()
+    device = next(model.parameters()).device
 
     running_loss = 0.0
     total = 0
@@ -90,8 +92,8 @@ def validate_model(model, val_loader, criterion):
     all_labels = []
 
     for batch in val_loader:
-        inputs = batch["xray"]
-        labels = batch["target"]
+        inputs = batch["xray"].to(device)
+        labels = batch["target"].to(device)
 
         with torch.no_grad():
             outputs = model(inputs)
@@ -99,8 +101,8 @@ def validate_model(model, val_loader, criterion):
 
             running_loss += loss.item() * inputs.size(0)
             total += outputs.size(0)
-            all_logits.append(outputs)
-            all_labels.append(labels)
+            all_logits.append(outputs.cpu())
+            all_labels.append(labels.cpu())
 
     accuracy, balanced_acc, roc_auc, avg_precision = compute_metrics(
         torch.cat(all_labels), torch.cat(all_logits)
