@@ -24,19 +24,17 @@ def compute_metrics(labels, logits):
     return accuracy, balanced_acc, roc_auc, avg_precision
 
 
-def plot_loss(train_loss, val_loss, save_path=None):
-    if len(train_loss) != len(val_loss):
-        raise ValueError(
-            "Training and validation loss histories must have the same length"
-        )
+def plot_metric(train_values, val_values, name, save_path=None):
+    if len(train_values) != len(val_values):
+        raise ValueError("Training and validation histories must have the same length")
 
     figure = Figure()
     axis = figure.add_subplot()
-    epochs = range(1, len(train_loss) + 1)
-    axis.plot(epochs, train_loss, label="Training loss")
-    axis.plot(epochs, val_loss, label="Validation loss")
+    epochs = range(1, len(train_values) + 1)
+    axis.plot(epochs, train_values, label=f"Training {name}")
+    axis.plot(epochs, val_values, label=f"Validation {name}")
     axis.set_xlabel("Epoch")
-    axis.set_ylabel("Loss")
+    axis.set_ylabel(name)
     axis.legend()
     figure.tight_layout()
     if save_path is not None:

@@ -2,7 +2,7 @@ import torch
 from args import *
 from schemas import History
 from torch import nn, optim
-from utils import compute_metrics, plot_loss
+from utils import compute_metrics, plot_metric
 
 args = get_args()
 
@@ -64,14 +64,20 @@ def train_model(model, train_loader, val_loader, fold, output_dir, save=False):
             f"val AP: {val_history.average_precision[-1]:.4f}",
         )
 
-        if save:
-            plot_loss(
-                train_history.loss,
-                val_history.loss,
-                save_path=output_dir / f"fold_{fold}_train_val_loss.png",
+    if save:
+        plots = [
+            ("loss", "Loss"),
+            ("balanced_accuracy", "Balanced Accuracy"),
+            ("roc_auc", "ROC-AUC"),
+            ("average_precision", "Average Precision"),
+        ]
+        for attr, name in plots:
+            plot_metric(
+                getattr(train_history, attr),
+                getattr(val_history, attr),
+                name,
+                save_path=output_dir / f"fold_{fold}_{attr}.png",
             )
-
-        # TODO: plot, performance validation
 
 
 def validate_model(model, val_loader, criterion):
