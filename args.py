@@ -18,9 +18,11 @@ def get_args():
         default="sessions",
     )
 
-    parser.add_argument("--csv_dir", type=str, default=str(Path(__file__).resolve().parent / "data/csv"))
+    parser.add_argument(
+        "--csv_dir", type=str, default=str(Path(__file__).resolve().parent / "data/csv")
+    )
 
-    parser.add_argument("--epochs", type=int, default=10) # TODO: change back to 100
+    parser.add_argument("--epochs", type=int, default=3)  # TODO: change back to 100
 
     parser.add_argument("--batch_size", type=int, default=32, choices=[16, 32, 64, 128])
 

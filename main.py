@@ -33,12 +33,11 @@ for fold in range(5):
     model = MyModel(backbone=args.backbone)
 
     # 6. Train the model
-    session_name = f"{run_name}_fold_{fold}"
     train_model(
         model,
         train_loader,
         val_loader,
-        session_name=session_name,
+        fold=fold,
         output_dir=run_dir,
         save=True,
     )

@@ -7,10 +7,10 @@ from utils import compute_metrics, plot_loss
 args = get_args()
 
 
-def train_model(model, train_loader, val_loader, session_name, output_dir, save=False):
+def train_model(model, train_loader, val_loader, fold, output_dir, save=False):
     train_history = History()
     val_history = History()
-    best_val_loss = float("inf")
+    best_balanced_accuracy = -1.0
     for epoch in range(args.epochs):
         model.train()
         criterion = nn.CrossEntropyLoss()
@@ -46,11 +46,13 @@ def train_model(model, train_loader, val_loader, session_name, output_dir, save=
         val_history.append(*validate_model(model, val_loader, criterion))
 
         val_loss = val_history.loss[-1]
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
+        if val_history.balanced_accuracy[-1] > best_balanced_accuracy:
+            best_balanced_accuracy = val_history.balanced_accuracy[-1]
             if save:
                 output_dir.mkdir(parents=True, exist_ok=True)
-                torch.save(model.state_dict(), output_dir / f"{session_name}_best.pt")
+                torch.save(
+                    model.state_dict(), output_dir / f"best_model_fold_{fold}.pth"
+                )
 
         print(
             f"epoch: {epoch} |",
@@ -66,7 +68,7 @@ def train_model(model, train_loader, val_loader, session_name, output_dir, save=
             plot_loss(
                 train_history.loss,
                 val_history.loss,
-                save_path=output_dir / f"{session_name}_train_val_loss.png",
+                save_path=output_dir / f"fold_{fold}_train_val_loss.png",
             )
 
         # TODO: plot, performance validation
